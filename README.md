@@ -10,7 +10,7 @@ npm start
 
 Then open http://localhost:8080. (A local server is needed because ES modules don't load from `file://`.)
 
-**Controls:** WASD / Arrow keys to move, Shift to run, E to hop on/off the bike, 1-5 to select a bag slot, Space to use the selected item (e.g. chop with the axe), click to interact.
+**Controls:** WASD / Arrow keys to move, Shift to run, E to hop on/off the bike, 1-5 to select a bag slot, Space to use the selected item (chop with the axe, swing the sword), click to interact.
 
 ## Layout
 
@@ -30,7 +30,7 @@ src/
 
 | File | Purpose |
 |---|---|
-| `src/main.js` | Creates world / player / UI, connects interactions (chest, shop, bank, bike), saving, game loop, mouse clicks |
+| `src/main.js` | Creates world / player / UI, connects interactions (chest, shop, bank, bike), saving, fainting, game loop, mouse clicks |
 | **core/** | |
 | `core/constants.js` | Tile size, tile types, solid / swimmable / no-ride tiles |
 | `core/utils.js` | Seeded RNG, clamp, shape helpers (circle, ellipse, rounded rect) |
@@ -40,16 +40,18 @@ src/
 | **world/** | |
 | `world/world.js` | Tile map, world generation (pond, path, trees), collision, particles, regions |
 | `world/trees.js` | Choppable trees: hits, felling animation, stumps, wood drops |
+| `world/bats.js` | Cave bats: flight / swarming, sword hits, wing drops. **`BAT_SETTINGS`** at the top controls max bats, respawn time, hits to kill, bite damage / rate |
 | `world/pickups.js` | Items on the ground: bounce, bob, auto-pickup |
 | `world/props.js` | Drawings for trees, stumps, rocks |
 | **places/** | |
 | `places/house.js` | The player's home: walls, door, chest, radio, fading roof |
 | `places/furniture.js` | Drawings for the house furniture (bed, bookshelf, chest, radio, ...) |
 | `places/town.js` | Market Square: plaza, lots, fountain, lamps, signs |
+| `places/cave.js` | The Bat Cave: hillside north of town, cave carving, hill overlay, darkness, bat respawning |
 | `places/store.js` | General Store: what it buys / sells, building, counter, merchant |
 | `places/bank.js` | The Bank: building, teller cage, teller |
 | **player/** | |
-| `player/player.js` | Movement, collision, swimming, riding, tool swings, drawing |
+| `player/player.js` | Movement, collision, swimming, riding, tool swings, health, drawing. **`HEALTH_SETTINGS`** at the top: max health, regen, faint penalty |
 | `player/bicycle.js` | Rideable bike: parked object + drawing (side / front / back views) |
 | `player/actions.js` | What using (Space) each held item does |
 | **items/** | |
@@ -60,5 +62,5 @@ src/
 | `audio/radio.js` | Radio: streams a random Grateful Dead show from archive.org |
 | `audio/fountainSound.js` | Synthesized fountain ambience (Web Audio), only heard right next to it |
 | **ui/** | |
-| `ui/panels.js` | DOM UI: bag bar, coin purse, chest / shop / bank panels, toasts, save status |
+| `ui/panels.js` | DOM UI: health bar, bag bar, coin purse, chest / shop / bank panels, toasts, save status |
 | `ui/hud.js` | Canvas HUD: location label, controls hint, radio now-playing |

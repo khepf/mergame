@@ -25,7 +25,14 @@ export class GameUI {
     const bottom = el('div', 'bottom-bar');
     this.hotbar = el('div', 'hotbar');
     this.purse = el('div', 'purse');
-    bottom.append(this.hotbar, this.purse);
+    this.health = el('div', 'health');
+    this.healthText = el('div', 'health-text');
+    const track = el('div', 'health-track');
+    this.healthFill = el('div', 'health-fill');
+    track.appendChild(this.healthFill);
+    this.health.append(this.healthText, track);
+    this.shownHealth = null;
+    bottom.append(this.health, this.hotbar, this.purse);
     root.appendChild(bottom);
 
     this.panel = el('div', 'panel hidden');
@@ -321,6 +328,18 @@ export class GameUI {
       if (onClick && (item || numbered)) slot.addEventListener('click', () => onClick(i));
       return slot;
     });
+  }
+
+  /** Update the health bar (cheap to call every frame: only touches the DOM when it changes). */
+  setHealth(health, max) {
+    const hp = Math.ceil(health);
+    if (hp === this.shownHealth) return;
+    this.shownHealth = hp;
+    const pct = Math.max(0, Math.min(1, hp / max));
+    this.healthText.textContent = `♥ ${hp} / ${max}`;
+    this.healthFill.style.width = `${pct * 100}%`;
+    this.healthFill.style.background = pct > 0.5 ? '#4caf50' : pct > 0.25 ? '#e0b030' : '#e04040';
+    this.health.classList.toggle('low', pct <= 0.25);
   }
 
   /** Briefly show the "Saved" indicator. */

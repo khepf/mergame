@@ -6,9 +6,12 @@ import { circle, ellipse, rrect } from '../core/utils.js';
 export const GENERAL_STORE = {
   name: 'General Store',
   merchant: 'Bram',
-  greeting: "Welcome, welcome! I'm always short on wood. Got any to sell?",
-  buys: { wood: 1 }, // item type -> what the merchant pays per item
-  sells: [{ type: 'apple', price: 3 }], // what the merchant has for sale (placeholder stock)
+  greeting: "Welcome, welcome! I buy wood and bat wings. And if you're heading up to that cave, you'll want a sword.",
+  buys: { wood: 1, batWing: 2 }, // item type -> what the merchant pays per item
+  sells: [
+    { type: 'sword', price: 100 },
+    { type: 'apple', price: 3 }, // placeholder stock
+  ],
 };
 
 const TRADE_RANGE = 72; // px: how close you must be to the merchant to trade

@@ -113,7 +113,7 @@ export function buildTown(world, x0, y0) {
 
 // ---- Ground painting ----
 
-function paintCobbles(g, tx, ty) {
+export function paintCobbles(g, tx, ty) {
   const px = tx * TILE, py = ty * TILE;
   g.fillStyle = '#8a857b'; // mortar
   g.fillRect(px, py, TILE, TILE);

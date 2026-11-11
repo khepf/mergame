@@ -4,6 +4,7 @@ import { buildHouse } from '../places/house.js';
 import { drawRock } from './props.js';
 import { createTree } from './trees.js';
 import { buildTown, TOWN_W, TOWN_H } from '../places/town.js';
+import { buildCave } from '../places/cave.js';
 
 const MEADOW_WIDTH = 64; // tiles: the home area on the west side of the map
 
@@ -20,6 +21,7 @@ export class World {
     this.particles = []; // short-lived effects (wood chips, leaves, floating text)
     this.notify = null; // (message, kind) => void, set by the game to show toasts
     this.felled = new Set(); // "tx,ty" of trees that have been chopped down
+    this.seed = seed;
     this.rng = mulberry32(seed);
 
     this.generate();
@@ -99,7 +101,7 @@ export class World {
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#000';
         ctx.fillText(p.text, p.x + 0.5, p.y + 0.5);
-        ctx.fillStyle = '#fff4c8';
+        ctx.fillStyle = p.textColor ?? '#fff4c8';
         ctx.fillText(p.text, p.x, p.y);
         ctx.textAlign = 'start';
       } else {
@@ -128,10 +130,17 @@ export class World {
 
     this.carvePath(this.house.door.x, this.house.door.y + 1, this.town.entrance);
     this.plantTrees();
+
+    // The Bat Cave, in the hills just north of Market Square. Carved after the trees are planted
+    // (with its own RNG) so everything else generates exactly as before.
+    const t = this.town;
+    this.cave = buildCave(this, t.x + 2, 2, t.w - 15, t.y - 7, this.seed);
   }
 
   /** Name of the area at a pixel position (shown in the HUD). */
   regionAt(px, py) {
+    if (this.cave.contains(px, py)) return 'Bat Cave';
+    if (this.cave.inHillside(px, py)) return 'Hillside';
     if (this.town.contains(px, py)) return 'Market Square';
     if (px > (MEADOW_WIDTH + 4) * TILE) return 'Woods';
     return 'Meadow';
@@ -210,6 +219,7 @@ export class World {
         } else if (rng() < 0.012) {
           this.block(tx, ty);
           this.addObject({
+            kind: 'rock', tx, ty,
             x: (tx + 0.5) * TILE, y: (ty + 1) * TILE - 6,
             draw(ctx) { drawRock(ctx, this); },
           });
@@ -278,6 +288,7 @@ export class World {
     }
     this.house.paintGround(g);
     this.town.paintGround(g);
+    this.cave.paintGround(g);
     return c;
   }
 

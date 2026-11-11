@@ -28,6 +28,67 @@ export const ITEMS = {
     },
   },
 
+  sword: {
+    name: 'Sword',
+    description: 'Select it and press Space to swing. Bats beware!',
+    tool: true,
+    draw(g) {
+      g.save();
+      g.translate(16, 16);
+      g.rotate(-Math.PI / 4);
+      g.fillStyle = '#d7dce3'; // blade
+      g.beginPath();
+      g.moveTo(-2.5, -4);
+      g.lineTo(2.5, -4);
+      g.lineTo(2.5, -17);
+      g.lineTo(0, -21);
+      g.lineTo(-2.5, -17);
+      g.closePath();
+      g.fill();
+      g.fillStyle = '#a9b0ba';
+      g.fillRect(0, -18, 1.2, 14);
+      g.fillStyle = '#d4af37'; // crossguard + pommel
+      g.fillRect(-7, -4, 14, 3);
+      g.beginPath();
+      g.arc(0, 9, 2.5, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = '#6b4423'; // grip
+      g.fillRect(-1.5, -1, 3, 9);
+      g.restore();
+    },
+  },
+
+  batWing: {
+    name: 'Bat Wing',
+    description: 'Leathery and light. Bram at the General Store buys these.',
+    stack: 20,
+    draw(g) {
+      g.fillStyle = '#4d3f5c';
+      g.beginPath();
+      g.moveTo(4, 12);
+      g.lineTo(28, 6);
+      g.lineTo(25, 14);
+      g.lineTo(20, 13);
+      g.lineTo(17, 20);
+      g.lineTo(12, 17);
+      g.lineTo(8, 24);
+      g.closePath();
+      g.fill();
+      g.strokeStyle = '#2b2235'; // finger bones
+      g.lineWidth = 1.2;
+      g.beginPath();
+      for (const [x, y] of [[28, 6], [20, 13], [12, 17]]) {
+        g.moveTo(5, 12);
+        g.lineTo(x, y);
+      }
+      g.stroke();
+      g.fillStyle = '#6b5b78';
+      g.beginPath();
+      g.arc(5, 12, 2.5, 0, Math.PI * 2);
+      g.fill();
+    },
+  },
+
   wood: {
     name: 'Wood',
     description: 'Freshly chopped logs. Good for building.',
@@ -56,7 +117,7 @@ export const ITEMS = {
 
   apple: {
     name: 'Apple',
-    description: 'Crisp and red.',
+    description: 'Crisp and red. Select it and press Space to eat (+25 health).',
     draw(g) {
       g.fillStyle = '#5a3a1e';
       g.fillRect(15, 5, 2, 6);

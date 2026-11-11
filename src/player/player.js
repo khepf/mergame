@@ -14,6 +14,50 @@ const SWING_TIME = 0.38; // seconds per tool swing
 const SWING_HIT_AT = 0.45; // fraction of the swing when it connects
 const MOUNT_RANGE = 36; // px: how close you must be to hop on a bike
 
+// ---- Tweak these to change how health works ----
+export const HEALTH_SETTINGS = {
+  max: 100,
+  regenDelay: 5, // seconds without taking damage before health starts coming back
+  regenPerSecond: 1, // health regained per second after that
+  invulnerableSeconds: 0.7, // after a hit, can't be hit again for this long
+  faintCoinLoss: 0.1, // fraction of purse coins lost when you faint (bank coins are safe)
+};
+
+// Held tools, drawn pointing along +x from the hand (the swing rotates them).
+const TOOL_SHAPES = {
+  axe(ctx) {
+    ctx.fillStyle = '#8b5a2b';
+    ctx.fillRect(0, -1, 15, 2.5);
+    ctx.fillStyle = '#9aa0a8';
+    ctx.beginPath();
+    ctx.moveTo(11, -1.5);
+    ctx.lineTo(16, -1.5);
+    ctx.lineTo(18, 6);
+    ctx.lineTo(11, 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#e1e6ec';
+    ctx.fillRect(16.5, 0, 1.5, 6);
+  },
+  sword(ctx) {
+    ctx.fillStyle = '#6b4423'; // grip
+    ctx.fillRect(-1, -1, 5, 2.5);
+    ctx.fillStyle = '#d4af37'; // crossguard
+    ctx.fillRect(4, -3.5, 2, 7.5);
+    ctx.fillStyle = '#d7dce3'; // blade
+    ctx.beginPath();
+    ctx.moveTo(6, -1.3);
+    ctx.lineTo(19, -1.3);
+    ctx.lineTo(22, 0.25);
+    ctx.lineTo(19, 1.8);
+    ctx.lineTo(6, 1.8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#a9b0ba';
+    ctx.fillRect(6, 0, 13, 0.6);
+  },
+};
+
 export class Player {
   constructor(x, y) {
     this.x = x; // feet position in world pixels
@@ -22,6 +66,12 @@ export class Player {
     this.runSpeed = 185;
     this.inventory = new Inventory(5); // the player's bag
     this.wallet = new Wallet(0); // coins in the purse, counted in bronze
+
+    // Health
+    this.maxHealth = HEALTH_SETTINGS.max;
+    this.health = this.maxHealth; // may be fractional while regenerating; shown rounded up
+    this.hurtTimer = 0; // > 0: just got hit (blinking, can't be hit again)
+    this.sinceHurt = Infinity; // seconds since last damage
     this.bank = new Wallet(0); // coins deposited at the bank
     this.selected = 0; // which bag slot is in hand
     this.swing = null; // { t, onHit, hit } while swinging a tool
@@ -48,6 +98,7 @@ export class Player {
 
   update(dt, input, world) {
     this.time += dt;
+    this.updateHealth(dt);
     this.swimming = !this.bike && world.isWater(this.x, this.y - 2);
     const targetSink = this.swimming ? SWIM_DEPTH : 0;
     this.sink += (targetSink - this.sink) * Math.min(1, dt * 10);
@@ -82,6 +133,37 @@ export class Player {
       this.wheelAngle += (moved / WHEEL_R) * spin;
       this.pedalAngle += (moved / 9) * spin;
     }
+  }
+
+  // ---- Health ----
+
+  updateHealth(dt) {
+    this.hurtTimer = Math.max(0, this.hurtTimer - dt);
+    this.sinceHurt += dt;
+    if (this.health > 0 && this.sinceHurt > HEALTH_SETTINGS.regenDelay) this.heal(HEALTH_SETTINGS.regenPerSecond * dt);
+  }
+
+  get fainted() {
+    return this.health <= 0;
+  }
+
+  /** Take a hit from something at (fromX, fromY). Returns false if it didn't land. */
+  takeDamage(amount, fromX, fromY, world) {
+    if (this.hurtTimer > 0 || this.fainted) return false;
+    this.health = Math.max(0, this.health - amount);
+    this.hurtTimer = HEALTH_SETTINGS.invulnerableSeconds;
+    this.sinceHurt = 0;
+    // Knocked back a little, away from the attacker
+    const dx = this.x - fromX, dy = this.y - fromY;
+    const d = Math.hypot(dx, dy) || 1;
+    this.moveBy(world, (dx / d) * 10, 0);
+    this.moveBy(world, 0, (dy / d) * 10);
+    world.addParticle({ x: this.x, y: this.y - 44, vx: 0, vy: -30, life: 0.8, text: `-${amount}`, textColor: '#ff6b6b' });
+    return true;
+  }
+
+  heal(amount) {
+    this.health = Math.min(this.maxHealth, this.health + amount);
   }
 
   // ---- Tools ----
@@ -181,6 +263,14 @@ export class Player {
   }
 
   draw(ctx) {
+    // Blink while recovering from a hit
+    const blink = this.hurtTimer > 0 && Math.floor(this.hurtTimer * 16) % 2 === 0;
+    if (blink) ctx.globalAlpha = 0.4;
+    this.drawCharacter(ctx);
+    ctx.globalAlpha = 1;
+  }
+
+  drawCharacter(ctx) {
     const x = Math.round(this.x), y = Math.round(this.y);
 
     // Expanding rings left behind on the water
@@ -199,10 +289,10 @@ export class Player {
     }
 
     if (this.sink < 0.5) {
-      const axe = this.heldType === 'axe';
-      if (axe && this.dir === 'up') this.drawAxe(ctx, x, y); // behind the body
+      const tool = TOOL_SHAPES[this.heldType] ? this.heldType : null;
+      if (tool && this.dir === 'up') this.drawTool(ctx, x, y, tool); // behind the body
       this.drawBody(ctx, x, y, true);
-      if (axe && this.dir !== 'up') this.drawAxe(ctx, x, y);
+      if (tool && this.dir !== 'up') this.drawTool(ctx, x, y, tool);
       return;
     }
 
@@ -357,8 +447,8 @@ export class Player {
     if (this.dir === 'down') drawHandlebar(ctx, x, y);
   }
 
-  /** Axe in hand: hangs at your side, or arcs through a swing. */
-  drawAxe(ctx, x, y) {
+  /** Tool in hand (axe, sword): hangs at your side, or arcs through a swing. */
+  drawTool(ctx, x, y, type) {
     const side = this.dir === 'left' || this.dir === 'right';
     const f = this.dir === 'left' ? -1 : 1;
     const by = y - 8;
@@ -375,18 +465,7 @@ export class Player {
     ctx.translate(px, py);
     if (side) ctx.scale(f, 1);
     ctx.rotate(a);
-    ctx.fillStyle = '#8b5a2b';
-    ctx.fillRect(0, -1, 15, 2.5);
-    ctx.fillStyle = '#9aa0a8';
-    ctx.beginPath();
-    ctx.moveTo(11, -1.5);
-    ctx.lineTo(16, -1.5);
-    ctx.lineTo(18, 6);
-    ctx.lineTo(11, 4);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = '#e1e6ec';
-    ctx.fillRect(16.5, 0, 1.5, 6);
+    TOOL_SHAPES[type](ctx);
     ctx.restore();
   }
 
