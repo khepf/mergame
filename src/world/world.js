@@ -1,9 +1,9 @@
-import { TILE, T, SOLID_TILES, SWIMMABLE_TILES } from './constants.js';
-import { mulberry32, clamp } from './utils.js';
-import { buildHouse } from './house.js';
-import { drawRock } from './sprites.js';
+import { TILE, T, SOLID_TILES, SWIMMABLE_TILES } from '../core/constants.js';
+import { mulberry32, clamp } from '../core/utils.js';
+import { buildHouse } from '../places/house.js';
+import { drawRock } from './props.js';
 import { createTree } from './trees.js';
-import { buildTown, TOWN_W, TOWN_H } from './town.js';
+import { buildTown, TOWN_W, TOWN_H } from '../places/town.js';
 
 const MEADOW_WIDTH = 64; // tiles: the home area on the west side of the map
 

@@ -1,5 +1,5 @@
 // A rideable bicycle. While parked it's a world object; while ridden, the player draws it.
-import { ellipse } from './utils.js';
+import { ellipse } from '../core/utils.js';
 
 export const WHEEL_R = 7;
 const FRAME = '#c0392b';

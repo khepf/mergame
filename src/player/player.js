@@ -1,7 +1,7 @@
-import { ellipse, circle, rrect } from './utils.js';
-import { Inventory } from './inventory.js';
-import { Wallet } from './money.js';
-import { NO_RIDE_TILES } from './constants.js';
+import { ellipse, circle, rrect } from '../core/utils.js';
+import { Inventory } from '../items/inventory.js';
+import { Wallet } from '../items/money.js';
+import { NO_RIDE_TILES } from '../core/constants.js';
 import { drawBike, drawHandlebar, WHEEL_R } from './bicycle.js';
 
 // Collision box relative to the feet position (x, y).

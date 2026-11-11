@@ -1,10 +1,10 @@
 // The player's home base: a small house built into the world's tile map.
-import { TILE, T } from './constants.js';
-import { furnitureDrawers } from './sprites.js';
-import { rrect } from './utils.js';
-import { RadioPlayer } from './radio.js';
-import { Inventory } from './inventory.js';
-import { makeItem } from './items.js';
+import { TILE, T } from '../core/constants.js';
+import { furnitureDrawers } from './furniture.js';
+import { rrect } from '../core/utils.js';
+import { RadioPlayer } from '../audio/radio.js';
+import { Inventory } from '../items/inventory.js';
+import { makeItem } from '../items/items.js';
 
 const ROOF_OVERHANG = 8;
 const ROOF_LIFT = 26;

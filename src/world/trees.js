@@ -1,6 +1,6 @@
 // Choppable trees: shake when hit, topple when felled, leave a stump and drop wood.
-import { TILE } from './constants.js';
-import { drawTree, drawStump } from './sprites.js';
+import { TILE } from '../core/constants.js';
+import { drawTree, drawStump } from './props.js';
 import { spawnDrop } from './pickups.js';
 
 export const TREE_HP = 3; // axe hits to fell a tree

@@ -1,7 +1,7 @@
 // Items lying on the ground. They pop out with a little bounce and get picked up
 // automatically when the player walks over them (if there's room in the bag).
-import { ITEMS, iconImage } from './items.js';
-import { ellipse } from './utils.js';
+import { ITEMS, iconImage } from '../items/items.js';
+import { ellipse } from '../core/utils.js';
 
 const PICKUP_RADIUS = 20;
 const PICKUP_DELAY = 0.4; // let it land before it can be grabbed

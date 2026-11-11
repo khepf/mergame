@@ -1,6 +1,6 @@
 // Market Square: a cobblestone plaza with empty lots where shops will go.
-import { TILE, T } from './constants.js';
-import { circle, ellipse, rrect } from './utils.js';
+import { TILE, T } from '../core/constants.js';
+import { circle, ellipse, rrect } from '../core/utils.js';
 import { buildStore, GENERAL_STORE } from './store.js';
 import { buildBank } from './bank.js';
 

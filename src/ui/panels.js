@@ -1,7 +1,7 @@
-// DOM-based UI: the player's bag bar + coin purse, the chest panel, the shop panel, and toasts.
-import { ITEMS, iconUrl, makeItem } from './items.js';
-import { COINS, splitCoins, formatCoins, BRONZE_PER_GOLD, BRONZE_PER_SILVER } from './money.js';
-import { isTyping } from './input.js';
+// DOM-based UI panels: the bag bar + coin purse, chest / shop / bank panels, toasts, save status.
+import { ITEMS, iconUrl, makeItem } from '../items/items.js';
+import { COINS, splitCoins, formatCoins } from '../items/money.js';
+import { isTyping } from '../core/input.js';
 
 function el(tag, className, text) {
   const e = document.createElement(tag);
@@ -10,7 +10,7 @@ function el(tag, className, text) {
   return e;
 }
 
-export class InventoryUI {
+export class GameUI {
   constructor(player) {
     this.player = player;
     const bag = (this.bag = player.inventory);

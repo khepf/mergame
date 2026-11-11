@@ -1,5 +1,5 @@
 // What happens when the player uses (Space) the item in their hand.
-import { findTreeInFront, chopTree } from './trees.js';
+import { findTreeInFront, chopTree } from '../world/trees.js';
 
 export function useHeldItem(player, world) {
   switch (player.heldType) {

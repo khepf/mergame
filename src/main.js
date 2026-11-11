@@ -1,15 +1,15 @@
-import { World } from './world.js';
-import { Player } from './player.js';
-import { Camera } from './camera.js';
-import { input, isTyping } from './input.js';
-import { rrect } from './utils.js';
-import { InventoryUI } from './ui.js';
-import { Bicycle } from './bicycle.js';
-import { TILE } from './constants.js';
-import { useHeldItem } from './actions.js';
-import { collectPickups } from './pickups.js';
-import { readSave, applySave, saveGame, clearSave } from './save.js';
-import { FountainSound } from './fountainSound.js';
+import { World } from './world/world.js';
+import { Player } from './player/player.js';
+import { Camera } from './core/camera.js';
+import { input, isTyping } from './core/input.js';
+import { GameUI } from './ui/panels.js';
+import { drawHud } from './ui/hud.js';
+import { Bicycle } from './player/bicycle.js';
+import { TILE } from './core/constants.js';
+import { useHeldItem } from './player/actions.js';
+import { collectPickups } from './world/pickups.js';
+import { readSave, applySave, saveGame, clearSave } from './core/save.js';
+import { FountainSound } from './audio/fountainSound.js';
 
 const AUTOSAVE_SECONDS = 5;
 
@@ -20,7 +20,7 @@ const world = new World(112, 48, 1337);
 const player = new Player(world.house.spawn.x, world.house.spawn.y);
 const camera = new Camera();
 
-const ui = new InventoryUI(player);
+const ui = new GameUI(player);
 const house = world.house;
 house.onChestClick = () =>
   ui.toggleChest(house.chest, {
@@ -150,58 +150,7 @@ function render() {
 
   // Screen space HUD
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  drawHud();
-}
-
-function drawHud() {
-  const inside = world.house.contains(player.x, player.y);
-  const label = inside ? 'Home' : player.swimming ? 'Pond' : world.regionAt(player.x, player.y);
-  ctx.font = '600 15px system-ui, sans-serif';
-  const w = ctx.measureText(label).width + 24;
-  ctx.fillStyle = 'rgba(15, 20, 25, 0.6)';
-  rrect(ctx, 12, 12, w, 30, 8);
-  ctx.fillStyle = '#f3ead8';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(label, 24, 27);
-
-  drawRadioHud(inside);
-
-  // Controls hint, tucked under the location label so it never collides with the bag bar
-  ctx.font = '12px system-ui, sans-serif';
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  const hint = 'WASD / Arrows: move  ·  Shift: run  ·  E: bike  ·  1-5: select  ·  Space: use  ·  Click: interact';
-  ctx.fillText(hint, 15, 57);
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';
-  ctx.fillText(hint, 14, 56);
-}
-
-function drawRadioHud(inside) {
-  const radio = world.house.radio;
-  let lines = null;
-  if (inside && radio.state === 'tuning') lines = ['♪ Tuning in…'];
-  else if (inside && radio.state === 'playing') {
-    const show = radio.show;
-    lines = [
-      `♪ ${show.title}`,
-      `${radio.currentTrack.title}  (${radio.trackIndex + 1}/${show.tracks.length})`,
-    ];
-  } else if (inside && radio.error && performance.now() - radio.errorAt < 4000) {
-    lines = ['♪ No signal. Try again.'];
-  }
-  if (!lines) return;
-
-  ctx.font = '600 14px system-ui, sans-serif';
-  const w = Math.max(...lines.map((l) => ctx.measureText(l).width)) + 28;
-  const h = 14 + lines.length * 20;
-  const x = window.innerWidth - w - 12;
-  ctx.fillStyle = 'rgba(15, 20, 25, 0.65)';
-  rrect(ctx, x, 12, w, h, 8);
-  ctx.textBaseline = 'middle';
-  lines.forEach((l, i) => {
-    ctx.font = i === 0 ? '600 14px system-ui, sans-serif' : '13px system-ui, sans-serif';
-    ctx.fillStyle = i === 0 ? '#ffd98a' : '#f3ead8';
-    ctx.fillText(l, x + 14, 12 + 17 + i * 20);
-  });
+  drawHud(ctx, world, player);
 }
 
 // ---- Mouse: click things in the world ----

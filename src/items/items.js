@@ -1,5 +1,5 @@
 // Item definitions. Icons are drawn procedurally on a 32x32 grid and cached as images.
-import { circle, ellipse, rrect } from './utils.js';
+import { circle, ellipse, rrect } from '../core/utils.js';
 
 // stack: how many fit in one slot (default 1). tool: true if it can be used with Space.
 export const ITEMS = {

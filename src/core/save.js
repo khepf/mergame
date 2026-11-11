@@ -1,8 +1,8 @@
 // Save / load game progress in the browser (localStorage).
 // The world itself is generated from a fixed seed, so we only store what the player changed.
-import { ITEMS } from './items.js';
-import { restoreFelledTree } from './trees.js';
-import { spawnDrop } from './pickups.js';
+import { ITEMS } from '../items/items.js';
+import { restoreFelledTree } from '../world/trees.js';
+import { spawnDrop } from '../world/pickups.js';
 
 const KEY = 'mergame.save';
 const VERSION = 1;

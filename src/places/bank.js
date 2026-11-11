@@ -1,7 +1,7 @@
 // The Bank: a stone building with a teller who keeps your coins safe.
 // Same lot layout as the store (building rows 0-2, teller row 3, counter row 4).
-import { TILE } from './constants.js';
-import { circle, ellipse, rrect } from './utils.js';
+import { TILE } from '../core/constants.js';
+import { circle, ellipse, rrect } from '../core/utils.js';
 
 export const BANK = {
   name: 'Bank',

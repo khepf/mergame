@@ -1,6 +1,6 @@
 // Shops: what they trade, plus the building, counter and merchant NPC drawn on a town lot.
-import { TILE } from './constants.js';
-import { circle, ellipse, rrect } from './utils.js';
+import { TILE } from '../core/constants.js';
+import { circle, ellipse, rrect } from '../core/utils.js';
 
 // Prices are in bronze (see money.js).
 export const GENERAL_STORE = {

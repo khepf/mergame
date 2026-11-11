@@ -14,27 +14,51 @@ Then open http://localhost:8080. (A local server is needed because ES modules do
 
 ## Layout
 
+```
+index.html, style.css     page shell + UI styles
+serve.js                  tiny local dev server (npm start)
+src/
+  main.js                 entry point: creates the game, wires things together, game loop
+  core/                   engine-level building blocks
+  world/                  the map and things that live in it
+  places/                 buildings and locations
+  player/                 the player character and what they can do
+  items/                  items, inventories, money
+  audio/                  music and sound
+  ui/                     everything drawn over the game
+```
+
 | File | Purpose |
 |---|---|
-| `src/main.js` | Game loop, rendering order, HUD |
-| `src/world.js` | Tile map, world generation (pond, path, trees), collision |
-| `src/house.js` | The player's home: walls, door, furniture, fading roof |
-| `src/town.js` | Market Square: cobblestone plaza, empty shop lots, fountain, lamps, signs |
-| `src/store.js` | Shops: trade definitions (General Store), building, counter, merchant NPC |
-| `src/bank.js` | The Bank: stone building, teller cage, teller NPC (deposit / withdraw coins) |
-| `src/money.js` | Coins (gold / silver / bronze) and the player's wallet |
-| `src/fountainSound.js` | Synthesized fountain ambience (Web Audio), louder the closer you stand |
-| `src/radio.js` | Radio: streams a random Grateful Dead show from archive.org |
-| `src/inventory.js` | Fixed-size item container with stacking (player bag, chests) |
-| `src/actions.js` | What using (Space) each held item does |
-| `src/trees.js` | Choppable trees: hits, felling animation, stumps, wood drops |
-| `src/pickups.js` | Items on the ground: bounce, bob, auto-pickup |
-| `src/items.js` | Item definitions + procedurally drawn icons |
-| `src/ui.js` | DOM UI: bag bar, coin purse, chest / shop / bank panels, toasts |
-| `src/bicycle.js` | Rideable bike: parked object + drawing (side / front / back views) |
-| `src/player.js` | Movement, collision, facing, walk animation, drawing |
-| `src/sprites.js` | Procedural drawings for trees, rocks, furniture |
-| `src/save.js` | Save / load progress in localStorage (autosaves; "New game" button clears it) |
-| `src/camera.js` | Smooth follow camera clamped to world bounds |
-| `src/input.js` | Keyboard state |
-| `src/constants.js` | Tile size and tile types |
+| `src/main.js` | Creates world / player / UI, connects interactions (chest, shop, bank, bike), saving, game loop, mouse clicks |
+| **core/** | |
+| `core/constants.js` | Tile size, tile types, solid / swimmable / no-ride tiles |
+| `core/utils.js` | Seeded RNG, clamp, shape helpers (circle, ellipse, rounded rect) |
+| `core/input.js` | Keyboard state (ignores keys while typing in a text box) |
+| `core/camera.js` | Smooth follow camera clamped to world bounds |
+| `core/save.js` | Save / load progress in localStorage (autosaves; "New game" button clears it) |
+| **world/** | |
+| `world/world.js` | Tile map, world generation (pond, path, trees), collision, particles, regions |
+| `world/trees.js` | Choppable trees: hits, felling animation, stumps, wood drops |
+| `world/pickups.js` | Items on the ground: bounce, bob, auto-pickup |
+| `world/props.js` | Drawings for trees, stumps, rocks |
+| **places/** | |
+| `places/house.js` | The player's home: walls, door, chest, radio, fading roof |
+| `places/furniture.js` | Drawings for the house furniture (bed, bookshelf, chest, radio, ...) |
+| `places/town.js` | Market Square: plaza, lots, fountain, lamps, signs |
+| `places/store.js` | General Store: what it buys / sells, building, counter, merchant |
+| `places/bank.js` | The Bank: building, teller cage, teller |
+| **player/** | |
+| `player/player.js` | Movement, collision, swimming, riding, tool swings, drawing |
+| `player/bicycle.js` | Rideable bike: parked object + drawing (side / front / back views) |
+| `player/actions.js` | What using (Space) each held item does |
+| **items/** | |
+| `items/items.js` | Item definitions + procedurally drawn icons |
+| `items/inventory.js` | Fixed-size item container with stacking (bag, chest) |
+| `items/money.js` | Coins (gold / silver / bronze) and wallets (purse, bank account) |
+| **audio/** | |
+| `audio/radio.js` | Radio: streams a random Grateful Dead show from archive.org |
+| `audio/fountainSound.js` | Synthesized fountain ambience (Web Audio), only heard right next to it |
+| **ui/** | |
+| `ui/panels.js` | DOM UI: bag bar, coin purse, chest / shop / bank panels, toasts, save status |
+| `ui/hud.js` | Canvas HUD: location label, controls hint, radio now-playing |
