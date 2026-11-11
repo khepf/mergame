@@ -1,6 +1,7 @@
 // DOM-based UI: the player's bag bar + coin purse, the chest panel, the shop panel, and toasts.
 import { ITEMS, iconUrl, makeItem } from './items.js';
-import { COINS, splitCoins, formatCoins } from './money.js';
+import { COINS, splitCoins, formatCoins, BRONZE_PER_GOLD, BRONZE_PER_SILVER } from './money.js';
+import { isTyping } from './input.js';
 
 function el(tag, className, text) {
   const e = document.createElement(tag);
@@ -16,6 +17,8 @@ export class InventoryUI {
     this.wallet = player.wallet;
     this.chest = null; // { inventory, onClose, unsubscribe } while a chest is open
     this.shop = null; // { store } while a shop is open
+    this.bank = null; // { bank } while talking to the bank teller
+    this.account = player.bank; // coins kept in the bank
 
     const root = document.getElementById('ui');
 
@@ -43,8 +46,10 @@ export class InventoryUI {
 
     bag.onChange(() => this.render());
     this.wallet.onChange(() => this.render());
+    this.account.onChange(() => this.render());
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Escape') this.closePanels();
+      if (isTyping(e)) return; // typing an amount: don't switch slots
       // 1-5 pick which bag slot is in your hands
       const n = /^Digit([1-9])$/.exec(e.code);
       if (n && Number(n[1]) <= bag.size) this.select(Number(n[1]) - 1);
@@ -60,13 +65,18 @@ export class InventoryUI {
     return this.shop !== null;
   }
 
+  get bankOpen() {
+    return this.bank !== null;
+  }
+
   get panelOpen() {
-    return this.chestOpen || this.shopOpen;
+    return this.chestOpen || this.shopOpen || this.bankOpen;
   }
 
   closePanels() {
     this.closeChest();
     this.closeShop();
+    this.closeBank();
   }
 
   // ---- Chest ----
@@ -78,6 +88,7 @@ export class InventoryUI {
 
   openChest(inventory, { onOpen, onClose } = {}) {
     this.closeShop();
+    this.closeBank();
     const unsubscribe = inventory.onChange(() => this.render());
     this.chest = { inventory, onClose, unsubscribe };
     onOpen?.();
@@ -102,6 +113,7 @@ export class InventoryUI {
 
   openShop(store) {
     this.closeChest();
+    this.closeBank();
     this.shop = { store };
     this.render();
   }
@@ -110,6 +122,38 @@ export class InventoryUI {
     if (!this.shop) return;
     this.shop = null;
     this.render();
+  }
+
+  // ---- Bank ----
+
+  openBank(bank) {
+    this.closeChest();
+    this.closeShop();
+    this.bank = { bank };
+    this.render();
+  }
+
+  closeBank() {
+    if (!this.bank) return;
+    this.bank = null;
+    this.render();
+  }
+
+  /** Move coins between purse and account. from/to are Wallets. */
+  bankTransfer(amount, from, to, verb, shortMsg) {
+    if (!(amount > 0)) return this.toast('Enter an amount first', 'error');
+    if (!from.canAfford(amount)) return this.toast(shortMsg, 'error');
+    from.spend(amount);
+    to.add(amount);
+    this.toast(`${verb} ${formatCoins(amount)}`);
+  }
+
+  deposit(amount) {
+    this.bankTransfer(amount, this.wallet, this.account, 'Deposited', "You don't have that much in your purse");
+  }
+
+  withdraw(amount) {
+    this.bankTransfer(amount, this.account, this.wallet, 'Withdrew', "You don't have that much in the bank");
   }
 
   sell(type, n) {
@@ -147,6 +191,7 @@ export class InventoryUI {
 
     if (this.chest) this.renderChest();
     else if (this.shop) this.renderShop();
+    else if (this.bank) this.renderBank();
     else this.panel.classList.add('hidden');
   }
 
@@ -200,6 +245,60 @@ export class InventoryUI {
       footer,
       el('div', 'panel-hint', 'Esc to close'),
       closeButton(() => this.closeShop()),
+    );
+  }
+
+  renderBank() {
+    const def = this.bank.bank.def;
+    this.panel.className = 'panel bank';
+
+    const greeting = el('div', 'shop-greeting');
+    greeting.append(el('b', '', `${def.teller}: `), `“${def.greeting}”`);
+
+    const balances = el('div', 'bank-balances');
+    for (const [label, total] of [['In the bank', this.account.total], ['In your purse', this.wallet.total]]) {
+      const line = el('div', 'bank-balance');
+      line.append(el('span', 'bank-label', label), coinsEl(total, true));
+      balances.appendChild(line);
+    }
+
+    // Amount entry: gold / silver / bronze
+    const inputs = COINS.map((c) => {
+      const input = el('input', 'coin-input');
+      input.type = 'number';
+      input.min = '0';
+      input.step = '1';
+      input.placeholder = '0';
+      input.title = c.name;
+      const wrap = el('label', 'coin-field');
+      wrap.append(input, el('i', `coin ${c.key}`));
+      return { coin: c, input, wrap };
+    });
+    const amount = () =>
+      inputs.reduce((sum, { coin, input }) => sum + Math.max(0, Math.floor(Number(input.value) || 0)) * coin.value, 0);
+
+    const entry = el('div', 'bank-entry');
+    entry.append(
+      el('span', 'bank-label', 'Amount'),
+      ...inputs.map((i) => i.wrap),
+      button('Deposit', false, () => this.deposit(amount())),
+      button('Withdraw', false, () => this.withdraw(amount())),
+    );
+
+    const quick = el('div', 'bank-quick');
+    quick.append(
+      button('Deposit all', this.wallet.total === 0, () => this.deposit(this.wallet.total)),
+      button('Withdraw all', this.account.total === 0, () => this.withdraw(this.account.total)),
+    );
+
+    this.panel.replaceChildren(
+      el('div', 'panel-title shop-title', def.name),
+      greeting,
+      balances,
+      entry,
+      quick,
+      el('div', 'panel-hint', `1 gold = 1000 silver  ·  1 silver = 1000 bronze  ·  Esc to close`),
+      closeButton(() => this.closeBank()),
     );
   }
 

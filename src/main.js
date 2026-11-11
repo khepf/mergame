@@ -1,7 +1,7 @@
 import { World } from './world.js';
 import { Player } from './player.js';
 import { Camera } from './camera.js';
-import { input } from './input.js';
+import { input, isTyping } from './input.js';
 import { rrect } from './utils.js';
 import { InventoryUI } from './ui.js';
 import { Bicycle } from './bicycle.js';
@@ -36,6 +36,14 @@ store.onMerchantClick = () => {
   if (ui.shopOpen) ui.closeShop();
   else if (store.inRange(player)) ui.openShop(store);
   else ui.toast(`Walk up to the counter to talk to ${store.def.merchant}`);
+};
+
+// The Bank: click the teller (from the counter) to deposit or withdraw coins.
+const bank = world.town.bank;
+bank.onTellerClick = () => {
+  if (ui.bankOpen) ui.closeBank();
+  else if (bank.inRange(player)) ui.openBank(bank);
+  else ui.toast(`Walk up to the counter to talk to ${bank.def.teller}`);
 };
 
 // The bike starts parked outside the front door, beside the doormat.
@@ -86,6 +94,7 @@ const fountainSound = new FountainSound();
 for (const evt of ['keydown', 'pointerdown']) window.addEventListener(evt, () => fountainSound.unlock());
 
 window.addEventListener('keydown', (e) => {
+  if (isTyping(e)) return;
   if (e.code === 'KeyE' && !e.repeat) toggleBike();
   if (e.code === 'Space' && !ui.panelOpen) useHeldItem(player, world); // hold to keep swinging
 });
@@ -114,6 +123,8 @@ function update(dt) {
   if (ui.chestOpen && !inside) ui.closeChest(); // walked away from the chest
   store.merchant.near = store.inRange(player);
   if (ui.shopOpen && !store.merchant.near) ui.closeShop(); // walked away from the counter
+  bank.teller.near = bank.inRange(player);
+  if (ui.bankOpen && !bank.teller.near) ui.closeBank();
   const f = world.town.fountain;
   fountainSound.update(Math.hypot(player.x - f.x, player.y - f.y));
   camera.follow(player.x, player.y - 12, world, dt);

@@ -172,3 +172,30 @@ canvas { display: block; width: 100vw; height: 100vh; }
 .saved-indicator.show { opacity: 0.85; }
 .btn-small { font-size: 12px; padding: 4px 8px; opacity: 0.75; }
 .btn-small:hover { opacity: 1; }
+
+/* ---- Bank ---- */
+.panel.bank { width: 540px; }
+.bank-balances { margin: 10px 0 12px; display: grid; gap: 6px; }
+.bank-balance {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+}
+.bank-label { font-size: 13px; opacity: 0.8; font-weight: 600; }
+.bank-entry { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.coin-field { display: inline-flex; align-items: center; gap: 4px; }
+.coin-input {
+  width: 56px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  border: 1px solid #8b5a2b;
+  background: rgba(0, 0, 0, 0.35);
+  color: #f3ead8;
+  font: inherit;
+  font-size: 13px;
+}
+.bank-quick { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }

@@ -21,6 +21,7 @@ Then open http://localhost:8080. (A local server is needed because ES modules do
 | `src/house.js` | The player's home: walls, door, furniture, fading roof |
 | `src/town.js` | Market Square: cobblestone plaza, empty shop lots, fountain, lamps, signs |
 | `src/store.js` | Shops: trade definitions (General Store), building, counter, merchant NPC |
+| `src/bank.js` | The Bank: stone building, teller cage, teller NPC (deposit / withdraw coins) |
 | `src/money.js` | Coins (gold / silver / bronze) and the player's wallet |
 | `src/fountainSound.js` | Synthesized fountain ambience (Web Audio), louder the closer you stand |
 | `src/radio.js` | Radio: streams a random Grateful Dead show from archive.org |
@@ -29,7 +30,7 @@ Then open http://localhost:8080. (A local server is needed because ES modules do
 | `src/trees.js` | Choppable trees: hits, felling animation, stumps, wood drops |
 | `src/pickups.js` | Items on the ground: bounce, bob, auto-pickup |
 | `src/items.js` | Item definitions + procedurally drawn icons |
-| `src/ui.js` | DOM UI: bag bar, coin purse, chest panel, shop panel, toasts |
+| `src/ui.js` | DOM UI: bag bar, coin purse, chest / shop / bank panels, toasts |
 | `src/bicycle.js` | Rideable bike: parked object + drawing (side / front / back views) |
 | `src/player.js` | Movement, collision, facing, walk animation, drawing |
 | `src/sprites.js` | Procedural drawings for trees, rocks, furniture |

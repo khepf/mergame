@@ -19,6 +19,7 @@ export function snapshot({ player, world, bike }) {
       riding: !!player.bike,
       bag: slotsData(player.inventory),
       coins: player.wallet.total,
+      bank: player.bank.total,
     },
     bike: { x: Math.round(bike.x), y: Math.round(bike.y), facing: bike.facing },
     chest: slotsData(world.house.chest),
@@ -72,6 +73,8 @@ export function applySave(data, { player, world, bike }) {
   restoreSlots(world.house.chest, data.chest);
   player.wallet.total = Math.max(0, Math.floor(data.player.coins) || 0);
   player.wallet.emit();
+  player.bank.total = Math.max(0, Math.floor(data.player.bank) || 0); // older saves: no account yet
+  player.bank.emit();
 
   for (const key of data.felledTrees ?? []) {
     const [tx, ty] = key.split(',').map(Number);

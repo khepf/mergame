@@ -6,8 +6,9 @@
 // Volume follows how close the player is.
 
 const MAX_VOLUME = 0.55;
-const FULL_DIST = 56; // px from the basin: full volume when right next to it
-const SILENT_DIST = 130; // px: silent beyond this
+// Distances are px from the basin's center; the basin's edge is ~32px out and a tile is 32px.
+const FULL_DIST = 44; // full volume when right next to the basin
+const SILENT_DIST = 64; // silent beyond 1 tile from the basin's edge
 
 export class FountainSound {
   constructor() {

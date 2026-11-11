@@ -2,6 +2,7 @@
 import { TILE, T } from './constants.js';
 import { circle, ellipse, rrect } from './utils.js';
 import { buildStore, GENERAL_STORE } from './store.js';
+import { buildBank } from './bank.js';
 
 export const TOWN_W = 32; // tiles
 export const TOWN_H = 17;
@@ -54,8 +55,10 @@ export function buildTown(world, x0, y0) {
       g.strokeRect(x0 * TILE + 1, y0 * TILE + 1, TOWN_W * TILE - 2, TOWN_H * TILE - 2);
       // Clear the curb where the path comes in
       paintCobbles(g, x0, midY);
-      for (const lot of lots) if (!lot.store) paintLotBorder(g, lot);
-      town.store?.paintGround(g);
+      for (const lot of lots) {
+        if (lot.building) lot.building.paintGround(g);
+        else paintLotBorder(g, lot);
+      }
     },
   };
 
@@ -86,9 +89,13 @@ export function buildTown(world, x0, y0) {
     return obj;
   };
   lots.forEach((lot, i) => {
-    // The top-left lot is the General Store; the rest are still for sale.
+    // Top row: General Store, then the Bank. The rest are still for sale.
     if (i === 0) {
-      lot.store = town.store = buildStore(world, lot, GENERAL_STORE);
+      lot.building = town.store = buildStore(world, lot, GENERAL_STORE);
+      return;
+    }
+    if (i === 1) {
+      lot.building = town.bank = buildBank(world, lot);
       return;
     }
     const sx = lot.x + Math.floor(lot.w / 2);

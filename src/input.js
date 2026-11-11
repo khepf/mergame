@@ -1,7 +1,11 @@
 const keys = new Set();
 const PREVENT = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space']);
 
+/** Is the player typing into a text/number box? (Then keys shouldn't move them.) */
+export const isTyping = (e) => !!e.target?.closest?.('input, textarea, select');
+
 window.addEventListener('keydown', (e) => {
+  if (isTyping(e)) return;
   keys.add(e.code);
   if (PREVENT.has(e.code)) e.preventDefault();
 });

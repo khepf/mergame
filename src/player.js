@@ -21,7 +21,8 @@ export class Player {
     this.walkSpeed = 110;
     this.runSpeed = 185;
     this.inventory = new Inventory(5); // the player's bag
-    this.wallet = new Wallet(0); // coins, counted in bronze
+    this.wallet = new Wallet(0); // coins in the purse, counted in bronze
+    this.bank = new Wallet(0); // coins deposited at the bank
     this.selected = 0; // which bag slot is in hand
     this.swing = null; // { t, onHit, hit } while swinging a tool
     this.swimSpeed = 60;
