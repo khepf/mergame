@@ -117,7 +117,7 @@ export const ITEMS = {
 
   apple: {
     name: 'Apple',
-    description: 'Crisp and red. Select it and press Space to eat (+25 health).',
+    description: 'Crisp and red. Select it and press Space to eat (+5 health).',
     draw(g) {
       g.fillStyle = '#5a3a1e';
       g.fillRect(15, 5, 2, 6);

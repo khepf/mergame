@@ -5,6 +5,8 @@
 //   - random little droplet plinks
 // Volume follows how close the player is.
 
+import { getAudioContext, unlockAudio } from './audioContext.js';
+
 const MAX_VOLUME = 0.55;
 // Distances are px from the basin's center; the basin's edge is ~32px out and a tile is 32px.
 const FULL_DIST = 44; // full volume when right next to the basin
@@ -12,7 +14,7 @@ const SILENT_DIST = 64; // silent beyond 1 tile from the basin's edge
 
 export class FountainSound {
   constructor() {
-    this.ctx = null; // created on the first user gesture (browsers block audio until then)
+    this.ctx = null; // set on the first user gesture (browsers block audio until then)
     this.master = null;
     this.hearing = 0;
     this.nextDrop = 0;
@@ -20,17 +22,13 @@ export class FountainSound {
 
   /** Call from a user gesture (key press / click). Safe to call repeatedly. */
   unlock() {
-    if (!this.ctx) this.build();
-    if (this.ctx?.state === 'suspended') this.ctx.resume();
+    if (!this.ctx) this.build(getAudioContext());
+    unlockAudio();
   }
 
-  /** ctx: optional AudioContext to build into (e.g. an OfflineAudioContext for testing). */
+  /** ctx: the AudioContext to build into (an OfflineAudioContext works too, for testing). */
   build(ctx) {
-    if (!ctx) {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return;
-      ctx = new AC();
-    }
+    if (!ctx) return;
     this.ctx = ctx;
 
     this.master = ctx.createGain();

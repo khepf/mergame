@@ -61,6 +61,8 @@ src/
 | **audio/** | |
 | `audio/radio.js` | Radio: streams a random Grateful Dead show from archive.org |
 | `audio/fountainSound.js` | Synthesized fountain ambience (Web Audio), only heard right next to it |
+| `audio/caveSound.js` | Synthesized cave ambience: rumble, hollow wind, echoing drips, distant bats (fades in inside the cave) |
+| `audio/audioContext.js` | The one shared Web Audio context, unlocked on the first key press / click |
 | **ui/** | |
 | `ui/panels.js` | DOM UI: health bar, bag bar, coin purse, chest / shop / bank panels, toasts, save status |
 | `ui/hud.js` | Canvas HUD: location label, controls hint, radio now-playing |

@@ -2,7 +2,7 @@
 import { findTreeInFront, chopTree } from '../world/trees.js';
 import { findBatInFront, hitBat } from '../world/bats.js';
 
-const APPLE_HEAL = 25;
+const APPLE_HEAL = 5; // health restored by eating an apple
 
 export function useHeldItem(player, world) {
   switch (player.heldType) {

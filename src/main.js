@@ -10,6 +10,7 @@ import { useHeldItem } from './player/actions.js';
 import { collectPickups } from './world/pickups.js';
 import { readSave, applySave, saveGame, clearSave } from './core/save.js';
 import { FountainSound } from './audio/fountainSound.js';
+import { CaveSound } from './audio/caveSound.js';
 import { HEALTH_SETTINGS } from './player/player.js';
 import { formatCoins } from './items/money.js';
 
@@ -94,7 +95,13 @@ ui.onNewGame = () => {
 
 // Browsers only allow audio after the player interacts, so start it on the first key/click.
 const fountainSound = new FountainSound();
-for (const evt of ['keydown', 'pointerdown']) window.addEventListener(evt, () => fountainSound.unlock());
+const caveSound = new CaveSound();
+for (const evt of ['keydown', 'pointerdown']) {
+  window.addEventListener(evt, () => {
+    fountainSound.unlock();
+    caveSound.unlock();
+  });
+}
 
 window.addEventListener('keydown', (e) => {
   if (isTyping(e) || faint) return;
@@ -179,6 +186,7 @@ function update(dt) {
   bank.teller.near = bank.inRange(player);
   if (ui.bankOpen && !bank.teller.near) ui.closeBank();
   world.cave.update(dt, player); // bats + fading the hill when you walk in
+  caveSound.update(world.cave.darkness); // echoey ambience fades in with the darkness
   const f = world.town.fountain;
   fountainSound.update(Math.hypot(player.x - f.x, player.y - f.y));
   camera.follow(player.x, player.y - 12, world, dt);
