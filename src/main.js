@@ -9,6 +9,7 @@ import { TILE } from './constants.js';
 import { useHeldItem } from './actions.js';
 import { collectPickups } from './pickups.js';
 import { readSave, applySave, saveGame, clearSave } from './save.js';
+import { FountainSound } from './fountainSound.js';
 
 const AUTOSAVE_SECONDS = 5;
 
@@ -80,6 +81,10 @@ ui.onNewGame = () => {
   location.reload();
 };
 
+// Browsers only allow audio after the player interacts, so start it on the first key/click.
+const fountainSound = new FountainSound();
+for (const evt of ['keydown', 'pointerdown']) window.addEventListener(evt, () => fountainSound.unlock());
+
 window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyE' && !e.repeat) toggleBike();
   if (e.code === 'Space' && !ui.panelOpen) useHeldItem(player, world); // hold to keep swinging
@@ -109,6 +114,8 @@ function update(dt) {
   if (ui.chestOpen && !inside) ui.closeChest(); // walked away from the chest
   store.merchant.near = store.inRange(player);
   if (ui.shopOpen && !store.merchant.near) ui.closeShop(); // walked away from the counter
+  const f = world.town.fountain;
+  fountainSound.update(Math.hypot(player.x - f.x, player.y - f.y));
   camera.follow(player.x, player.y - 12, world, dt);
 }
 

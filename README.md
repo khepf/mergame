@@ -22,6 +22,7 @@ Then open http://localhost:8080. (A local server is needed because ES modules do
 | `src/town.js` | Market Square: cobblestone plaza, empty shop lots, fountain, lamps, signs |
 | `src/store.js` | Shops: trade definitions (General Store), building, counter, merchant NPC |
 | `src/money.js` | Coins (gold / silver / bronze) and the player's wallet |
+| `src/fountainSound.js` | Synthesized fountain ambience (Web Audio), louder the closer you stand |
 | `src/radio.js` | Radio: streams a random Grateful Dead show from archive.org |
 | `src/inventory.js` | Fixed-size item container with stacking (player bag, chests) |
 | `src/actions.js` | What using (Space) each held item does |

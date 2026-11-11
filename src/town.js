@@ -69,7 +69,8 @@ export function buildTown(world, x0, y0) {
 
   // Fountain in the middle of the square
   const fx = x0 + TOWN_W / 2 - 1, fy = midY - 1;
-  prop(fx, fy, 2, 2, function (ctx) { drawFountain(ctx, this.x, this.y); });
+  const fountain = prop(fx, fy, 2, 2, function (ctx) { drawFountain(ctx, this.x, this.y); });
+  town.fountain = { x: fountain.x, y: fountain.y - 26 }; // center of the basin (for sound)
 
   // Lamp posts flanking the entrance and the far end of the street
   for (const [lx, ly] of [[x0 + 1, midY - 2], [x0 + 1, midY + 2], [x0 + TOWN_W - 2, midY - 2], [x0 + TOWN_W - 2, midY + 2]]) {
