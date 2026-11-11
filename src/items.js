@@ -1,7 +1,59 @@
 // Item definitions. Icons are drawn procedurally on a 32x32 grid and cached as images.
 import { circle, ellipse, rrect } from './utils.js';
 
+// stack: how many fit in one slot (default 1). tool: true if it can be used with Space.
 export const ITEMS = {
+  axe: {
+    name: 'Axe',
+    description: 'Select it and press Space facing a tree to chop.',
+    tool: true,
+    draw(g) {
+      g.strokeStyle = '#8b5a2b';
+      g.lineWidth = 3;
+      g.lineCap = 'round';
+      g.beginPath();
+      g.moveTo(8, 28);
+      g.lineTo(22, 6);
+      g.stroke();
+      g.fillStyle = '#9aa0a8';
+      g.beginPath();
+      g.moveTo(17, 5);
+      g.lineTo(27, 3);
+      g.lineTo(29, 14);
+      g.lineTo(21, 12);
+      g.closePath();
+      g.fill();
+      g.fillStyle = '#e1e6ec';
+      g.fillRect(27, 4, 2, 10);
+    },
+  },
+
+  wood: {
+    name: 'Wood',
+    description: 'Freshly chopped logs. Good for building.',
+    stack: 20,
+    draw(g) {
+      const log = (x, y) => {
+        g.fillStyle = '#7a4a26';
+        g.fillRect(x, y, 18, 7);
+        g.fillStyle = '#5e3a1d';
+        g.fillRect(x, y + 5, 18, 2);
+        g.fillStyle = '#d9b07a';
+        g.beginPath();
+        g.ellipse(x + 18, y + 3.5, 3, 3.5, 0, 0, Math.PI * 2);
+        g.fill();
+        g.strokeStyle = '#a77b4a';
+        g.lineWidth = 1;
+        g.beginPath();
+        g.ellipse(x + 18, y + 3.5, 1.4, 1.8, 0, 0, Math.PI * 2);
+        g.stroke();
+      };
+      log(5, 17);
+      log(9, 9);
+      log(3, 24);
+    },
+  },
+
   apple: {
     name: 'Apple',
     description: 'Crisp and red.',
@@ -81,4 +133,18 @@ export function iconUrl(type) {
   return iconCache.get(type);
 }
 
-export const makeItem = (type) => ({ type });
+const imageCache = new Map();
+
+/** Image element for an item's icon (for drawing items on the canvas, e.g. dropped loot). */
+export function iconImage(type) {
+  if (!imageCache.has(type)) {
+    const img = new Image();
+    img.src = iconUrl(type);
+    imageCache.set(type, img);
+  }
+  return imageCache.get(type);
+}
+
+export const maxStack = (type) => ITEMS[type].stack ?? 1;
+
+export const makeItem = (type, count = 1) => ({ type, count });

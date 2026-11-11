@@ -1,7 +1,8 @@
 import { TILE, T, SOLID_TILES, SWIMMABLE_TILES } from './constants.js';
 import { mulberry32, clamp } from './utils.js';
 import { buildHouse } from './house.js';
-import { drawTree, drawRock } from './sprites.js';
+import { drawRock } from './sprites.js';
+import { createTree } from './trees.js';
 import { buildTown, TOWN_W, TOWN_H } from './town.js';
 
 const MEADOW_WIDTH = 64; // tiles: the home area on the west side of the map
@@ -15,6 +16,10 @@ export class World {
     this.tiles = new Uint8Array(width * height);
     this.blocked = new Uint8Array(width * height); // solid objects (trunks, furniture)
     this.objects = []; // depth-sorted drawables: { x, y, draw(ctx) }
+    this.active = new Set(); // objects currently animating: update(dt, world) -> false when done
+    this.particles = []; // short-lived effects (wood chips, leaves, floating text)
+    this.notify = null; // (message, kind) => void, set by the game to show toasts
+    this.felled = new Set(); // "tx,ty" of trees that have been chopped down
     this.rng = mulberry32(seed);
 
     this.generate();
@@ -34,6 +39,9 @@ export class World {
   }
   block(tx, ty) {
     if (this.inBounds(tx, ty)) this.blocked[ty * this.width + tx] = 1;
+  }
+  unblock(tx, ty) {
+    if (this.inBounds(tx, ty)) this.blocked[ty * this.width + tx] = 0;
   }
   /** extraSolid: optional set of tile types to also treat as solid (e.g. while on a bike). */
   isSolid(tx, ty, extraSolid = null) {
@@ -59,6 +67,47 @@ export class World {
 
   addObject(o) {
     this.objects.push(o);
+  }
+
+  removeObject(o) {
+    const i = this.objects.indexOf(o);
+    if (i !== -1) this.objects.splice(i, 1);
+    this.active.delete(o);
+  }
+
+  addParticle(p) {
+    this.particles.push({ age: 0, gravity: 0, ...p });
+  }
+
+  update(dt) {
+    for (const o of [...this.active]) if (o.update(dt, this) === false) this.active.delete(o);
+    for (const p of this.particles) {
+      p.age += dt;
+      p.vy += p.gravity * dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+    }
+    this.particles = this.particles.filter((p) => p.age < p.life);
+  }
+
+  drawParticles(ctx) {
+    for (const p of this.particles) {
+      ctx.globalAlpha = Math.max(0, 1 - p.age / p.life);
+      if (p.text) {
+        ctx.font = 'bold 8px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#000';
+        ctx.fillText(p.text, p.x + 0.5, p.y + 0.5);
+        ctx.fillStyle = '#fff4c8';
+        ctx.fillText(p.text, p.x, p.y);
+        ctx.textAlign = 'start';
+      } else {
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+      }
+    }
+    ctx.globalAlpha = 1;
   }
 
   // ---- Generation ----
@@ -157,10 +206,7 @@ export class World {
 
         if (rng() < p) {
           this.block(tx, ty);
-          this.addObject({
-            x: (tx + 0.5) * TILE, y: (ty + 1) * TILE - 4, s: 0.85 + rng() * 0.35,
-            draw(ctx) { drawTree(ctx, this); },
-          });
+          this.addObject(createTree(tx, ty, 0.85 + rng() * 0.35));
         } else if (rng() < 0.012) {
           this.block(tx, ty);
           this.addObject({

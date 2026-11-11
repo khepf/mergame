@@ -1,5 +1,6 @@
 import { ellipse, circle, rrect } from './utils.js';
 import { Inventory } from './inventory.js';
+import { Wallet } from './money.js';
 import { NO_RIDE_TILES } from './constants.js';
 import { drawBike, drawHandlebar, WHEEL_R } from './bicycle.js';
 
@@ -9,6 +10,8 @@ const BOX_H = 6;
 
 const SWIM_DEPTH = 16; // px the body sinks: leaves head + shoulders above water
 const RIPPLE_LIFE = 1.2; // seconds
+const SWING_TIME = 0.38; // seconds per tool swing
+const SWING_HIT_AT = 0.45; // fraction of the swing when it connects
 const MOUNT_RANGE = 36; // px: how close you must be to hop on a bike
 
 export class Player {
@@ -18,6 +21,9 @@ export class Player {
     this.walkSpeed = 110;
     this.runSpeed = 185;
     this.inventory = new Inventory(5); // the player's bag
+    this.wallet = new Wallet(0); // coins, counted in bronze
+    this.selected = 0; // which bag slot is in hand
+    this.swing = null; // { t, onHit, hit } while swinging a tool
     this.swimSpeed = 60;
     this.swimFastSpeed = 90;
     this.rideSpeed = 240;
@@ -45,9 +51,10 @@ export class Player {
     const targetSink = this.swimming ? SWIM_DEPTH : 0;
     this.sink += (targetSink - this.sink) * Math.min(1, dt * 10);
     this.updateRipples(dt);
+    this.updateSwing(dt);
 
     let { x: ax, y: ay } = input.axis();
-    this.moving = ax !== 0 || ay !== 0;
+    this.moving = !this.swing && (ax !== 0 || ay !== 0); // plant your feet while swinging
     if (!this.moving) {
       this.animTime = 0;
       return;
@@ -74,6 +81,36 @@ export class Player {
       this.wheelAngle += (moved / WHEEL_R) * spin;
       this.pedalAngle += (moved / 9) * spin;
     }
+  }
+
+  // ---- Tools ----
+
+  /** Type of the item in the selected bag slot, or null. */
+  get heldType() {
+    return this.inventory.slots[this.selected]?.type ?? null;
+  }
+
+  /** Start a tool swing; onHit fires when the swing connects. Returns false if mid-swing. */
+  startSwing(onHit) {
+    if (this.swing) return false;
+    this.swing = { t: 0, onHit, hit: false };
+    return true;
+  }
+
+  updateSwing(dt) {
+    const s = this.swing;
+    if (!s) return;
+    s.t += dt;
+    if (!s.hit && s.t >= SWING_TIME * SWING_HIT_AT) {
+      s.hit = true;
+      s.onHit?.();
+    }
+    if (s.t >= SWING_TIME) this.swing = null;
+  }
+
+  /** Unit vector the player is facing. */
+  get facingVec() {
+    return { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[this.dir];
   }
 
   // ---- Bicycle ----
@@ -161,7 +198,10 @@ export class Player {
     }
 
     if (this.sink < 0.5) {
+      const axe = this.heldType === 'axe';
+      if (axe && this.dir === 'up') this.drawAxe(ctx, x, y); // behind the body
       this.drawBody(ctx, x, y, true);
+      if (axe && this.dir !== 'up') this.drawAxe(ctx, x, y);
       return;
     }
 
@@ -314,6 +354,39 @@ export class Player {
     this.leg(ctx, x + 1, legTop, 12 - s * 2);
     this.drawUpper(ctx, x, legTop, 0, 'walk');
     if (this.dir === 'down') drawHandlebar(ctx, x, y);
+  }
+
+  /** Axe in hand: hangs at your side, or arcs through a swing. */
+  drawAxe(ctx, x, y) {
+    const side = this.dir === 'left' || this.dir === 'right';
+    const f = this.dir === 'left' ? -1 : 1;
+    const by = y - 8;
+    const px = side ? x + f : this.dir === 'down' ? x + 7 : x - 7;
+    const py = by - 9;
+
+    let a = 1.25; // resting: pointing down and a little forward
+    if (this.swing) {
+      const p = Math.min(1, this.swing.t / (SWING_TIME * SWING_HIT_AT));
+      a = -2.2 + (1 - (1 - p) * (1 - p)) * 3.1; // raised behind the head -> chop forward
+    }
+
+    ctx.save();
+    ctx.translate(px, py);
+    if (side) ctx.scale(f, 1);
+    ctx.rotate(a);
+    ctx.fillStyle = '#8b5a2b';
+    ctx.fillRect(0, -1, 15, 2.5);
+    ctx.fillStyle = '#9aa0a8';
+    ctx.beginPath();
+    ctx.moveTo(11, -1.5);
+    ctx.lineTo(16, -1.5);
+    ctx.lineTo(18, 6);
+    ctx.lineTo(11, 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#e1e6ec';
+    ctx.fillRect(16.5, 0, 1.5, 6);
+    ctx.restore();
   }
 
   bikeLeg(ctx, hip, foot, f, color) {

@@ -20,6 +20,22 @@ export function drawTree(ctx, o) {
   circle(ctx, x - 4 * s, y - 41 * s, 5 * s);
 }
 
+export function drawStump(ctx, x, y, s = 1) {
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ellipse(ctx, x, y - 2, 9 * s, 3.5 * s);
+  ctx.fillStyle = '#6b4423';
+  ctx.fillRect(x - 5 * s, y - 8 * s, 10 * s, 7 * s);
+  ctx.fillStyle = '#4f321a';
+  ctx.fillRect(x + 2 * s, y - 8 * s, 3 * s, 7 * s);
+  ctx.fillStyle = '#d9b07a';
+  ellipse(ctx, x, y - 8 * s, 5 * s, 2.5 * s);
+  ctx.strokeStyle = '#a77b4a';
+  ctx.lineWidth = 0.75;
+  ctx.beginPath();
+  ctx.ellipse(x, y - 8 * s, 2.5 * s, 1.2 * s, 0, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
 export function drawRock(ctx, o) {
   const { x, y } = o;
   ctx.fillStyle = 'rgba(0,0,0,0.2)';

@@ -23,7 +23,7 @@ export function buildHouse(world, x, y, w, h) {
 
   const interior = { x: x + 1, y: y + 1, w: w - 2, h: h - 2 };
   const radio = new RadioPlayer();
-  const chest = new Inventory(5, [makeItem('apple'), makeItem('lantern'), makeItem('fishingRod')]);
+  const chest = new Inventory(5, [makeItem('apple'), makeItem('lantern'), makeItem('fishingRod'), makeItem('axe')]);
   const chestState = { open: false };
   const ix = interior.x, iy = interior.y;
 

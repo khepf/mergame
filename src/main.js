@@ -6,6 +6,11 @@ import { rrect } from './utils.js';
 import { InventoryUI } from './ui.js';
 import { Bicycle } from './bicycle.js';
 import { TILE } from './constants.js';
+import { useHeldItem } from './actions.js';
+import { collectPickups } from './pickups.js';
+import { readSave, applySave, saveGame, clearSave } from './save.js';
+
+const AUTOSAVE_SECONDS = 5;
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -13,10 +18,8 @@ const ctx = canvas.getContext('2d');
 const world = new World(112, 48, 1337);
 const player = new Player(world.house.spawn.x, world.house.spawn.y);
 const camera = new Camera();
-// Don't fade the roof on load if we start indoors.
-world.house.roofAlpha = world.house.contains(player.x, player.y) ? 0 : 1;
 
-const ui = new InventoryUI(player.inventory);
+const ui = new InventoryUI(player);
 const house = world.house;
 house.onChestClick = () =>
   ui.toggleChest(house.chest, {
@@ -24,7 +27,15 @@ house.onChestClick = () =>
     onClose: () => (house.chestState.open = false),
   });
 
-world.notify = (msg) => ui.toast(msg); // signs etc. talk to the player through toasts
+world.notify = (msg, kind) => ui.toast(msg, kind); // signs, pickups etc. talk to the player via toasts
+
+// The General Store: click the merchant (from the counter) to trade.
+const store = world.town.store;
+store.onMerchantClick = () => {
+  if (ui.shopOpen) ui.closeShop();
+  else if (store.inRange(player)) ui.openShop(store);
+  else ui.toast(`Walk up to the counter to talk to ${store.def.merchant}`);
+};
 
 // The bike starts parked outside the front door, beside the doormat.
 const bike = new Bicycle((house.door.x + 1) * TILE + 22, (house.door.y + 1) * TILE + 26, 'left');
@@ -38,8 +49,40 @@ function toggleBike() {
   else ui.toast(player.swimming ? "You can't ride while swimming" : 'Walk up to the bike to ride it');
 }
 
+// ---- Saving: load on start, autosave whenever something changes ----
+const game = { player, world, bike };
+const saved = readSave();
+if (saved) {
+  try {
+    applySave(saved, game);
+    ui.render();
+    ui.toast('Welcome back! Your progress was loaded.');
+  } catch (err) {
+    console.warn('Could not load saved game:', err);
+  }
+}
+// Don't fade the roof on load if we start indoors.
+house.roofAlpha = house.contains(player.x, player.y) ? 0 : 1;
+
+let savingEnabled = true;
+function autosave() {
+  if (!savingEnabled) return;
+  if (saveGame(game) === 'saved') ui.flashSaved();
+}
+setInterval(autosave, AUTOSAVE_SECONDS * 1000);
+document.addEventListener('visibilitychange', () => document.hidden && autosave());
+window.addEventListener('pagehide', autosave);
+
+ui.onNewGame = () => {
+  if (!confirm('Start a new game? Your saved progress will be erased.')) return;
+  savingEnabled = false; // don't re-save the old game on the way out
+  clearSave();
+  location.reload();
+};
+
 window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyE' && !e.repeat) toggleBike();
+  if (e.code === 'Space' && !ui.panelOpen) useHeldItem(player, world); // hold to keep swinging
 });
 
 let zoom = 2;
@@ -59,9 +102,13 @@ resize();
 
 function update(dt) {
   player.update(dt, input, world);
+  world.update(dt);
+  collectPickups(world, player);
   const inside = house.contains(player.x, player.y);
   house.update(dt, inside);
   if (ui.chestOpen && !inside) ui.closeChest(); // walked away from the chest
+  store.merchant.near = store.inRange(player);
+  if (ui.shopOpen && !store.merchant.near) ui.closeShop(); // walked away from the counter
   camera.follow(player.x, player.y - 12, world, dt);
 }
 
@@ -79,6 +126,7 @@ function render() {
   drawables.push(player);
   drawables.sort((a, b) => a.y - b.y); // things lower on screen draw on top
   for (const d of drawables) d.draw(ctx);
+  world.drawParticles(ctx);
 
   world.house.drawRoof(ctx);
 
@@ -103,7 +151,7 @@ function drawHud() {
   // Controls hint, tucked under the location label so it never collides with the bag bar
   ctx.font = '12px system-ui, sans-serif';
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  const hint = 'WASD / Arrows: move  ·  Shift: run  ·  E: bike  ·  Click: interact';
+  const hint = 'WASD / Arrows: move  ·  Shift: run  ·  E: bike  ·  1-5: select  ·  Space: use  ·  Click: interact';
   ctx.fillText(hint, 15, 57);
   ctx.fillStyle = 'rgba(255,255,255,0.85)';
   ctx.fillText(hint, 14, 56);

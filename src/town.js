@@ -1,6 +1,7 @@
 // Market Square: a cobblestone plaza with empty lots where shops will go.
 import { TILE, T } from './constants.js';
 import { circle, ellipse, rrect } from './utils.js';
+import { buildStore, GENERAL_STORE } from './store.js';
 
 export const TOWN_W = 32; // tiles
 export const TOWN_H = 17;
@@ -53,7 +54,8 @@ export function buildTown(world, x0, y0) {
       g.strokeRect(x0 * TILE + 1, y0 * TILE + 1, TOWN_W * TILE - 2, TOWN_H * TILE - 2);
       // Clear the curb where the path comes in
       paintCobbles(g, x0, midY);
-      for (const lot of lots) paintLotBorder(g, lot);
+      for (const lot of lots) if (!lot.store) paintLotBorder(g, lot);
+      town.store?.paintGround(g);
     },
   };
 
@@ -83,6 +85,11 @@ export function buildTown(world, x0, y0) {
     return obj;
   };
   lots.forEach((lot, i) => {
+    // The top-left lot is the General Store; the rest are still for sale.
+    if (i === 0) {
+      lot.store = town.store = buildStore(world, lot, GENERAL_STORE);
+      return;
+    }
     const sx = lot.x + Math.floor(lot.w / 2);
     const sy = lot.side === 'north' ? lot.y + lot.h - 1 : lot.y;
     const sign = prop(sx, sy, 1, 1, function (ctx) { drawLotSign(ctx, this.x, this.y); });
@@ -91,7 +98,7 @@ export function buildTown(world, x0, y0) {
 
   // Welcome sign where the path arrives
   const welcome = prop(x0 - 2, midY - 2, 1, 1, function (ctx) { drawWelcomeSign(ctx, this.x, this.y); });
-  clickable(welcome, 'Welcome to Market Square! Shops opening soon.', 30, 42);
+  clickable(welcome, 'Welcome to Market Square! Visit the General Store to buy and sell.', 30, 42);
 
   return town;
 }
